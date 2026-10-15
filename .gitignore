@@ -1,4 +1,14 @@
+# Secrets
 .env
+!.env.example
+
+# Zertifikate und Schlüssel
 certs/
 *.p12
 *.key
+*.pem
+
+# vim-Swap-Dateien
+*.swp
+*.swo
+*~
