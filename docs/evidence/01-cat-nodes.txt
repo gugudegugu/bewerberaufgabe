@@ -1,0 +1,4 @@
+name node.role master heap.max ram.max
+es03 fm        *           1gb     2gb
+es02 hims      -         1.5gb     3gb
+es01 hims      -         1.5gb     3gb
