@@ -102,7 +102,6 @@ services:
       - node.name=es01
       - node.roles=master,data_hot,data_content,ingest  # NEU
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
       - discovery.seed_hosts=es02,es03
       - path.repo=/usr/share/elasticsearch/snapshots  # NEU
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
@@ -152,7 +151,6 @@ services:
       - node.name=es02
       - node.roles=master,data_hot,data_content,ingest  # NEU
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
       - discovery.seed_hosts=es01,es03
       - path.repo=/usr/share/elasticsearch/snapshots  # NEU
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
@@ -204,7 +202,6 @@ services:
       - node.roles=master,data_frozen  # NEU
       - xpack.searchable.snapshot.shared_cache.size=20gb  # NEU: Default waere 90% der Disk
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
       - discovery.seed_hosts=es01,es02
       - path.repo=/usr/share/elasticsearch/snapshots  # NEU
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
@@ -262,6 +259,8 @@ services:
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}  # NEU: fuer Fleet/Alerting
+      - TELEMETRY_OPTIN=false # NEU: keine Nutzungsdaten an Elastic
+      - TELEMETRY_ALLOWCHANGINGOPTINSTATUS=false # NEU: im UI nicht wieder einschaltbar
     mem_limit: 1536m  # GEAENDERT
     healthcheck:
       test:
