@@ -1,1 +1,12 @@
-es01: es02: es03: 
+== es01
+Max processes             unlimited            unlimited            processes 
+Max open files            65535                65535                files     
+Max locked memory         unlimited            unlimited            bytes     
+== es02
+Max processes             unlimited            unlimited            processes 
+Max open files            65535                65535                files     
+Max locked memory         unlimited            unlimited            bytes     
+== es03
+Max processes             unlimited            unlimited            processes 
+Max open files            65535                65535                files     
+Max locked memory         unlimited            unlimited            bytes     

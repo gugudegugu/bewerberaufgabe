@@ -1,0 +1,22 @@
+{
+  "nodes" : {
+    "upqRYfySS2aTZ3RrKT-r2w" : {
+      "name" : "es01",
+      "process" : {
+        "mlockall" : true
+      }
+    },
+    "9ASPG4lSRuicQotYFWdtig" : {
+      "name" : "es02",
+      "process" : {
+        "mlockall" : true
+      }
+    },
+    "JZifS1sIRVGMI-5eFe9hsA" : {
+      "name" : "es03",
+      "process" : {
+        "mlockall" : true
+      }
+    }
+  }
+}

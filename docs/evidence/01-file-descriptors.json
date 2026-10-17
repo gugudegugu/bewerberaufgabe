@@ -1,0 +1,22 @@
+{
+  "nodes" : {
+    "upqRYfySS2aTZ3RrKT-r2w" : {
+      "name" : "es01",
+      "process" : {
+        "max_file_descriptors" : 65535
+      }
+    },
+    "9ASPG4lSRuicQotYFWdtig" : {
+      "name" : "es02",
+      "process" : {
+        "max_file_descriptors" : 65535
+      }
+    },
+    "JZifS1sIRVGMI-5eFe9hsA" : {
+      "name" : "es03",
+      "process" : {
+        "max_file_descriptors" : 65535
+      }
+    }
+  }
+}

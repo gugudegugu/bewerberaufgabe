@@ -1,0 +1,2 @@
+drwxrwx--- 5 1000 0 4096 Oct 17 02:15 /srv/es-frozen
+drwxrwx--- 2 0    0 4096 Oct 15 21:21 /srv/snapshots/es-repo

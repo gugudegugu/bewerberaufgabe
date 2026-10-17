@@ -1,0 +1,5 @@
+bind: /srv/es-frozen -> /usr/share/elasticsearch/data
+bind: /srv/snapshots/es-repo -> /usr/share/elasticsearch/snapshots
+volume: /var/lib/docker/volumes/elastic-homelab_certs/_data -> /usr/share/elasticsearch/config/certs
+bind: /home/gugu/elastic-homelab/config/jvm/heap-frozen.options -> /usr/share/elasticsearch/config/jvm.options.d/heap.options
+
