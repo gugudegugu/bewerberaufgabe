@@ -1,0 +1,4 @@
+nofile hard: 524288
+nofile soft: 1024
+nproc hard: unlimited
+nproc soft: unlimited

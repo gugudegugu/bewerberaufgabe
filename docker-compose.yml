@@ -197,8 +197,8 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-      - esdata03:/usr/share/elasticsearch/data
       - /srv/es-frozen:/usr/share/elasticsearch/data  # GEAENDERT: eigenes LV fuer den Frozen Node
+      - /srv/snapshots/es-repo:/usr/share/elasticsearch/snapshots  # NEU: gemeinsames Snapshot-Repo
       - ./config/jvm/heap-frozen.options:/usr/share/elasticsearch/config/jvm.options.d/heap.options:ro  # NEU: Heap 1 GB
     environment:
       - node.name=es03
@@ -281,8 +281,6 @@ volumes:
   esdata01:
     driver: local
   esdata02:
-    driver: local
-  esdata03:
     driver: local
   kibanadata:
     driver: local
