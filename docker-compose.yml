@@ -82,10 +82,6 @@ services:
       timeout: 5s
       retries: 120
 
-  # -------------------------------------------------------------------------
-  # es01: Hot-Node (master, data_hot, data_content, ingest)
-  # einziger Elasticsearch-Node mit Port zum Host (nur 127.0.0.1, siehe .env)
-  # -------------------------------------------------------------------------
   es01:
     depends_on:
       setup:
@@ -137,9 +133,6 @@ services:
     sysctls:
       net.ipv4.tcp_retries2: 5
 
-  # -------------------------------------------------------------------------
-  # es02: Hot-Node (identische Rollen wie es01, kein Port zum Host)
-  # -------------------------------------------------------------------------
   es02:
     depends_on:
       - es01
@@ -187,10 +180,7 @@ services:
       retries: 120
     sysctls:
       net.ipv4.tcp_retries2: 5
-  # -------------------------------------------------------------------------
-  # es03: Frozen-Node (master, data_frozen)
-  # haelt nur Searchable Snapshots (partially mounted), lokaler Shared Cache 20 GB
-  # -------------------------------------------------------------------------
+
   es03:
     depends_on:
       - es02
@@ -238,9 +228,6 @@ services:
       retries: 120
     sysctls:
       net.ipv4.tcp_retries2: 5   
-  # -------------------------------------------------------------------------
-  # Kibana (Port nur 127.0.0.1, Zugriff per SSH-Tunnel)
-  # -------------------------------------------------------------------------
   kibana:
     depends_on:
       es01:
@@ -274,6 +261,28 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+  
+  fleet-server:
+    depends_on:
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/elastic-agent/elastic-agent:${STACK_VERSION}
+    hostname: fleet-server
+    volumes:
+      - certs:/certs:ro                       # nur lesend
+    ports:
+      - 127.0.0.1:8220:8220                   # nur lokal, wie ES und Kibana
+    environment:
+      - FLEET_SERVER_ENABLE=true
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://es01:9200
+      - FLEET_SERVER_ELASTICSEARCH_CA=/certs/ca/ca.crt
+      - FLEET_SERVER_SERVICE_TOKEN=${FLEET_SERVER_SERVICE_TOKEN}
+      - FLEET_SERVER_POLICY_ID=${FLEET_SERVER_POLICY_ID}
+      - FLEET_SERVER_CERT=/certs/fleet-server/fleet-server.crt
+      - FLEET_SERVER_CERT_KEY=/certs/fleet-server/fleet-server.key
+      - FLEET_URL=https://fleet-server:8220
+      - FLEET_CA=/certs/ca/ca.crt
+    mem_limit: 1g
 
 volumes:
   certs:
