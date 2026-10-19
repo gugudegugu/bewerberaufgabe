@@ -1,13 +1,5 @@
 # Bewerberaufgabe System Engineer – Elastic Stack (Homelab)
 
-<!--
-TODO vor Abgabe (laut Aufgabe Pflicht im README):
-- Voraussetzungen
-- Startanleitung
-- Verwendete Version
-- Architekturentscheide (siehe decisions)
-- Abschnitt «Was ich anders machen würde in Produktion»
--->
 
 ## Inhalt
 
@@ -16,6 +8,133 @@ TODO vor Abgabe (laut Aufgabe Pflicht im README):
 3. [Fleet Server und Elastic Agent](#3-fleet-server-und-elastic-agent)
 4. [Fleet Policy ausrollen](#4-fleet-policy-ausrollen)
 5. [Konfiguration verstehen und abfragen](#5-konfiguration-verstehen-und-abfragen)
+
+---
+
+## Versionen
+
+| Komponente | Version |
+|---|---|
+| Elastic Stack (Elasticsearch, Kibana, Elastic Agent / Fleet Server) | **9.5.5** (in `.env` als `STACK_VERSION` gepinnt) |
+| Lizenz | 30-Tage-Trial (für Searchable Snapshots / Frozen Tier), Nachweis: [`01-license.json`](docs/evidence/01-license.json) |
+| Betriebssystem | Ubuntu 26.04.1 LTS |
+| Docker / Compose | 29.9.1 / v5.6.0 |
+
+## Voraussetzungen
+
+**Hardware:** 6 Cores, 16 GB RAM (davon ca. 10.5 GB fest an die Container vergeben), ca. 475 GB Disk mit LVM.
+
+**Host:**
+- Docker Engine und Compose-Plugin installiert. Docker wird nur über `sudo` benutzt, der User ist nicht in der `docker`-Gruppe.
+- Swap deaktiviert.
+- `vm.max_map_count` ≥ 1048576. Unter Ubuntu 26.04 ist das bereits Default.
+- Zeitsynchronisation aktiv (Chrony).
+- LVs bzw. Verzeichnisse, die für GID 0 schreibbar sind:
+
+```bash
+sudo mkdir -p /srv/snapshots/es-repo /srv/es-frozen
+sudo chgrp 0 /srv/snapshots/es-repo /srv/es-frozen
+sudo chmod 770 /srv/snapshots/es-repo /srv/es-frozen
+```
+
+Das Disk-Layout ist unter [Architekturentscheide](docs/decisions.md#host) beschrieben.
+
+## Startanleitung
+
+**1. Repository und Secrets**
+
+```bash
+git clone git@github.com:gugudegugu/bewerberaufgabe.git elastic-homelab
+cd elastic-homelab
+cp .env.example .env
+chmod 600 .env
+vim .env    # ELASTIC_PASSWORD, KIBANA_PASSWORD, KIBANA_ENCRYPTION_KEY (z. B. openssl rand -hex 32) setzen
+```
+
+**2. Erster Start des Clusters**
+
+Beim **allerersten** Start (leere Datenverzeichnisse) braucht Elasticsearch `cluster.initial_master_nodes`, damit sich der Cluster bilden kann. Die Zeile ist nach dem ersten Start wieder entfernt worden (siehe [Decisions](docs/decisions.md#cluster)). Für einen Neuaufbau trägt man sie bei es01–es03 unter `environment:` vorübergehend wieder ein:
+
+```yaml
+      - cluster.initial_master_nodes=es01,es02,es03
+```
+
+```bash
+sudo docker compose up -d setup es01 es02 es03 kibana
+sudo docker compose ps
+```
+
+Nach dem ersten Start mit Status green die Zeile wieder entfernen.
+
+**3. Zugriff auf Kibana**
+
+SSH-Tunnel vom Admin-PC: lokaler Port 5601 → `localhost:5601` auf dem Host. Danach ist Kibana unter `http://localhost:5601` erreichbar.
+
+**4. Trial-Lizenz und Admin-User**
+
+```
+POST _license/start_trial?acknowledge=true
+```
+
+Danach einen persönlichen Admin-User anlegen (*Stack Management → Users/Roles*). Der Superuser `elastic` dient nur der Ersteinrichtung und als Notfallzugang.
+
+**5. Snapshots, SLM, ILM**
+
+Repository `homelab-fs`, SLM-Policy `daily-snapshots`, ILM-Policy `homelab_ilm_hot_frozen`, Index-Template und Data Stream `homelab-demo`: siehe [Teil 2](#2-snapshots-und-lifecycle-bis-frozen).
+
+**6. Fleet Server**
+
+1. Kibana → *Fleet → Add Fleet Server → Advanced*: Policy `fleet-server-policy`, Fleet-Server-Host `https://fleet-server:8220`, Service-Token erzeugen.
+2. Token und Policy-ID in `.env` eintragen (`FLEET_SERVER_SERVICE_TOKEN`, `FLEET_SERVER_POLICY_ID`).
+3. Zweiten Fleet-Server-Host `https://localhost:8220` und die Outputs `es-internal` / `es-host` anlegen (siehe [3.1](#31-fleet-server-container)).
+4. Starten:
+
+```bash
+sudo docker compose up -d fleet-server
+```
+
+**7. Elastic Agent auf dem Host**
+
+```bash
+sudo install -d -m 755 /etc/ssl/elastic-homelab
+sudo install -m 644 /var/lib/docker/volumes/elastic-homelab_certs/_data/ca/ca.crt /etc/ssl/elastic-homelab/ca.crt
+
+cd /tmp
+curl -fsSLO https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-linux-x86_64.tar.gz
+curl -fsSLO https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-linux-x86_64.tar.gz.sha512
+sha512sum -c elastic-agent-9.5.5-linux-x86_64.tar.gz.sha512
+tar xzf elastic-agent-9.5.5-linux-x86_64.tar.gz && cd elastic-agent-9.5.5-linux-x86_64
+
+read -rsp "Enrollment-Token: " TOKEN; echo
+sudo ./elastic-agent install --url=https://localhost:8220 \
+  --enrollment-token="$TOKEN" --certificate-authorities=/etc/ssl/elastic-homelab/ca.crt
+unset TOKEN
+```
+
+Das Enrollment-Token danach in Fleet widerrufen. Der Agent arbeitet mit seinem eigenen API-Key weiter.
+
+**8. Nachweise sammeln**
+
+```bash
+host/collect-evidence.sh     # schreibt alle API-Ausgaben nach docs/evidence/
+```
+
+**Zurücksetzen:** `host/reset-cluster.sh` löscht Container, Volumes und den Frozen-Cache. Die Snapshots bleiben erhalten. Danach gilt wieder Schritt 2.
+
+## Architekturentscheide
+
+Alle Entscheide mit Begründung stehen in **[docs/decisions.md](docs/decisions.md)**. Die wichtigsten:
+
+| Thema | Entscheid |
+|---|---|
+| Node-Rollen | es01/es02 hot (master, data_hot, data_content, ingest), es03 frozen (master, data_frozen) |
+| Snapshot-Repository | Shared Filesystem statt MinIO |
+| Shared Cache | eigenes LV für es03, Default-Grösse (90 %) |
+| Netzwerk | alle Ports nur an 127.0.0.1, Zugriff per SSH-Tunnel |
+| TLS | eigene CA für alle Dienste |
+| Elastic Agent | nativ auf dem Host statt im Container |
+| Fleet-Adressen | je ein Fleet-Server-Host und ein Output für das Docker-Netz und für den Host |
+| Benutzer | `elastic` nur für Notfälle, persönlicher Admin-User für die tägliche Arbeit |
 
 ---
 
