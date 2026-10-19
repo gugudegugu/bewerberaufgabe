@@ -123,7 +123,7 @@ host/collect-evidence.sh     # schreibt alle API-Ausgaben nach docs/evidence/
 
 ## Architekturentscheide
 
-Alle Entscheide mit Begründung stehen in **[docs/decisions.md](docs/decisions.md)**. Die wichtigsten:
+Alle Entscheide mit Begründung stehen in **[decisions.md](decisions.md)**. Die wichtigsten:
 
 | Thema | Entscheid |
 |---|---|
