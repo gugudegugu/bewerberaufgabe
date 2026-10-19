@@ -405,12 +405,10 @@ Alle Einstellungen stehen im selben Compose-File. Das Format bestimmt aber das S
 
 - **Verteilung:** Nodes auf getrennten Hosts bzw. in getrennten Zonen, ab einer gewissen Grösse dedizierte Master-Nodes. Updates und Neustarts als Rolling Restart.
 - **Frozen Tier:** Frozen Node mit eigener Disk, Cache nach Such-Arbeitsset und Cache-Statistiken dimensioniert.
-- **Backup:** Snapshot-Repository ausserhalb des Hosts (S3/Objektspeicher, unveränderbar), 3-2-1-Regel. Ein Repository auf derselben Disk ist kein Backup.
+- **Backup:** Snapshot-Repository ausserhalb des Hosts (S3/Objektspeicher, unveränderbar). Ein Repository auf derselben Disk ist kein Backup.
 - **Zertifikate:** aus der Firmen-PKI, CA-Key offline statt im `certs`-Volume, Ablauf überwacht. Auch Kibana selbst per HTTPS, im Homelab ist Kibana nur durch den SSH-Tunnel geschützt.
-- **Adressen:** ein DNS-Name pro Dienst hinter einem Load Balancer, damit nur ein Output und ein Fleet-Server-Host nötig sind. Mindestens zwei Fleet Server.
 - **Netzwerk und Zugriff:** Segmentierung mit Firewall-Regeln in der `DOCKER-USER`-Chain statt SSH-Tunnel, Single Sign-on (SAML/OIDC) für Kibana.
 - **Secrets:** in einem Secret-Store (z. B. Vault) bzw. im Keystore statt in `.env`.
-- **Container-Betrieb:** Rootless Docker oder userns-remap, keine UID-Überschneidung mit interaktiven Benutzern, eigenes LV für `/var/lib/containerd`.
-- **Fleet:** Policies als Code (Terraform) mit Review, Rollout-Ringe, Fleet-Rechte in Kibana eng vergeben. Agent im unprivileged mode, wo die Integrationen es zulassen, und Tamper Protection.
+- **Container-Betrieb:** Rootless Docker, keine UID-Überschneidung mit interaktiven Benutzern, eigenes LV für `/var/lib/containerd`.
+- **Fleet:** Policies als Code (Terraform) mit Review, Rollout-Ringe, Fleet-Rechte in Kibana eng vergeben. Agent im unprivileged mode, wo die Integrationen es zulassen.
 - **Überwachung:** Stack Monitoring für den Cluster selbst, Alarm bei Agents *Offline* oder *Unhealthy*.
-- **Lifecycle:** realistische ILM-Zeiten und Retention nach Compliance-Vorgaben, Enterprise-Lizenz statt Trial.
