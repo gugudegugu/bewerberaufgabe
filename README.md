@@ -202,14 +202,6 @@ Data Stream angelegt, da noch kein Fleet Server:
 
 ![Discover: Dokumente aus partial-.ds-homelab-demo-…](docs/images/teil2-discover-frozen-index.png)
 
-GET _cat/shards/homelab-demo?v&h=index,prirep,state,node
-
-index                                      prirep state   node
-partial-.ds-homelab-demo-2026.10.17-000001 p      STARTED es03
-partial-.ds-homelab-demo-2026.10.17-000002 p      STARTED es03
-.ds-homelab-demo-2026.10.17-000003         p      STARTED es02
-.ds-homelab-demo-2026.10.17-000003         r      STARTED es01
-
 ### 2.5 Restore-Test
 
 > Lösche einen Index und stelle ihn aus einem Snapshot wieder her. Halte die Befehle fest.
