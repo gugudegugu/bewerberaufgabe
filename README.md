@@ -196,7 +196,7 @@ Standardwert der offiziellen Dokumentation.
 
 > Zeige, dass ein Index tatsächlich als Searchable Snapshot auf dem Frozen Node liegt und weiterhin durchsuchbar ist.
 
-Data Stream angelegt, da noch kein Fleet Server:
+ILM braucht für den Rollover einen Data Stream. Da noch keine Agent-Daten vorhanden waren, wurde ein eigener Data Stream mit Testdaten angelegt:
 
 ![Index-Template homelab-demo](docs/images/teil2-index-template.png)
 
