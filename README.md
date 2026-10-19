@@ -202,6 +202,16 @@ Data Stream angelegt, da noch kein Fleet Server:
 
 ![Discover: Dokumente aus partial-.ds-homelab-demo-…](docs/images/teil2-discover-frozen-index.png)
 
+```
+GET _cat/shards/homelab-demo?v&h=index,prirep,state,node
+
+index                                      prirep state   node
+partial-.ds-homelab-demo-2026.10.17-000001 p      STARTED es03
+partial-.ds-homelab-demo-2026.10.17-000002 p      STARTED es03
+.ds-homelab-demo-2026.10.17-000003         p      STARTED es02
+.ds-homelab-demo-2026.10.17-000003         r      STARTED es01
+```
+
 ### 2.5 Restore-Test
 
 > Lösche einen Index und stelle ihn aus einem Snapshot wieder her. Halte die Befehle fest.
@@ -378,6 +388,15 @@ GET _cluster/settings?include_defaults=true&flat_settings=true
 > Ermittle, welche JVM-Heap-Grösse jeder Node tatsächlich hat und welche Node-Rollen aktiv sind – ohne in die Compose-Datei zu schauen.
 
 ![Heap der Nodes über _cat/nodes](docs/images/teil5-jvm-heap.png)
+
+```
+GET _cat/nodes?v&h=name,node.role,master,heap.max&s=name
+
+name node.role master heap.max
+es01 hims      -         1.5gb
+es02 hims      -         1.5gb
+es03 fm        *           1gb
+```
 
 ### 5.5 Schreibweise für Einstellungen Kibana und Fleet Server
 
