@@ -1,7 +1,5 @@
 # Architekturentscheide – Elastic Stack Homelab
 
-[← zurück zum README](../README.md)
-
 - [Host](#host)
 - [Projekt](#projekt)
 - [Cluster](#cluster)
