@@ -1,22 +1,11 @@
 # Bewerberaufgabe System Engineer – Elastic Stack (Homelab)
 
-
-## Inhalt
-
-1. [Cluster mit drei Nodes und Frozen Tier](#1-cluster-mit-drei-nodes-und-frozen-tier)
-2. [Snapshots und Lifecycle bis Frozen](#2-snapshots-und-lifecycle-bis-frozen)
-3. [Fleet Server und Elastic Agent](#3-fleet-server-und-elastic-agent)
-4. [Fleet Policy ausrollen](#4-fleet-policy-ausrollen)
-5. [Konfiguration verstehen und abfragen](#5-konfiguration-verstehen-und-abfragen)
-
----
-
 ## Versionen
 
 | Komponente | Version |
 |---|---|
 | Elastic Stack (Elasticsearch, Kibana, Elastic Agent / Fleet Server) | **9.5.5** (in `.env` als `STACK_VERSION` gepinnt) |
-| Lizenz | 30-Tage-Trial (für Searchable Snapshots / Frozen Tier), Nachweis: [`01-license.json`](docs/evidence/01-license.json) |
+| Lizenz | 30-Tage-Trial (für Searchable Snapshots / Frozen Tier) |
 | Betriebssystem | Ubuntu 26.04.1 LTS |
 | Docker / Compose | 29.9.1 / v5.6.0 |
 
@@ -37,7 +26,7 @@ sudo chgrp 0 /srv/snapshots/es-repo /srv/es-frozen
 sudo chmod 770 /srv/snapshots/es-repo /srv/es-frozen
 ```
 
-Das Disk-Layout ist unter [Architekturentscheide](docs/decisions.md#host) beschrieben.
+Das Disk-Layout ist unter [Architekturentscheide](decisions.md#host) beschrieben.
 
 ## Startanleitung
 
@@ -53,7 +42,7 @@ vim .env    # ELASTIC_PASSWORD, KIBANA_PASSWORD, KIBANA_ENCRYPTION_KEY (z. B. op
 
 **2. Erster Start des Clusters**
 
-Beim **allerersten** Start (leere Datenverzeichnisse) braucht Elasticsearch `cluster.initial_master_nodes`, damit sich der Cluster bilden kann. Die Zeile ist nach dem ersten Start wieder entfernt worden (siehe [Decisions](docs/decisions.md#cluster)). Für einen Neuaufbau trägt man sie bei es01–es03 unter `environment:` vorübergehend wieder ein:
+Beim **allerersten** Start (leere Datenverzeichnisse) braucht Elasticsearch `cluster.initial_master_nodes`, damit sich der Cluster bilden kann. Die Zeile ist nach dem ersten Start wieder entfernt worden (siehe [Decisions](decisions.md#cluster)). Für einen Neuaufbau trägt man sie bei es01–es03 unter `environment:` vorübergehend wieder ein:
 
 ```yaml
       - cluster.initial_master_nodes=es01,es02,es03
@@ -112,12 +101,6 @@ unset TOKEN
 ```
 
 Das Enrollment-Token danach in Fleet widerrufen. Der Agent arbeitet mit seinem eigenen API-Key weiter.
-
-**8. Nachweise sammeln**
-
-```bash
-host/collect-evidence.sh     # schreibt alle API-Ausgaben nach docs/evidence/
-```
 
 **Zurücksetzen:** `host/reset-cluster.sh` löscht Container, Volumes und den Frozen-Cache. Die Snapshots bleiben erhalten. Danach gilt wieder Schritt 2.
 
@@ -219,6 +202,14 @@ Data Stream angelegt, da noch kein Fleet Server:
 
 ![Discover: Dokumente aus partial-.ds-homelab-demo-…](docs/images/teil2-discover-frozen-index.png)
 
+GET _cat/shards/homelab-demo?v&h=index,prirep,state,node
+
+index                                      prirep state   node
+partial-.ds-homelab-demo-2026.10.17-000001 p      STARTED es03
+partial-.ds-homelab-demo-2026.10.17-000002 p      STARTED es03
+.ds-homelab-demo-2026.10.17-000003         p      STARTED es02
+.ds-homelab-demo-2026.10.17-000003         r      STARTED es01
+
 ### 2.5 Restore-Test
 
 > Lösche einen Index und stelle ihn aus einem Snapshot wieder her. Halte die Befehle fest.
@@ -265,7 +256,7 @@ POST _snapshot/homelab-fs/daily-snap-2026.10.18-rcnps2cjtqq4baynkafota/_restore?
 
 ![Fleet Server Healthy in Fleet, Status im Container](docs/images/teil3-fleet-server.png)
 
-### 3.2 Elastic Agent Container
+### 3.2 Elastic Agent
 
 > Enrolle mindestens einen Elastic Agent – als Container oder direkt auf einem Host bzw. einer VM.
 
@@ -368,7 +359,7 @@ Ein anderer Weg wäre, jeweils eine Kopie der Agent Policy zu erstellen, Änderu
 > Ermittle für einen Node die effektiv aktiven Einstellungen, inklusive Defaults. Liefere die verwendeten Befehle bzw. API-Calls mit.
 
 ```
-GET _nodes/es03/settings?flat_settings=true
+GET _nodes/es01/settings?flat_settings=true
 ```
 → Konfiguration auf dem Node selber
 
@@ -407,3 +398,8 @@ GET _cluster/settings?include_defaults=true&flat_settings=true
 | Fleet Server | `FLEET_SERVER_HOST=0.0.0.0` |
 
 Alle Einstellungen stehen im selben Compose-File. Das Format bestimmt aber das Startskript des jeweiligen Images.
+
+---
+
+## Was ich anders machen würde in Produktion
+
