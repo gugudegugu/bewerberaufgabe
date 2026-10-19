@@ -14,7 +14,20 @@
 |---|---|---|
 | SSH | Nur Login per SSH-Key, Passwort-Login deaktiviert | Simples Hardening |
 | Betriebssystem | Ubuntu 26.04 LTS | Aktuelle LTS-Version mit langem Support, offiziell von Docker unterstützt und mir aus dem Betrieb vertraut. |
-| Disk-Layout | Eigene LVs für `/`, `/boot`, `/var`, `/var/log`, `/tmp`, `/home`, `/var/lib/docker` (150 GB), `/srv/snapshots` (80 GB) und `/srv/es-frozen` (30 GB), siehe Bild unten | Getrennte Volumes verhindern, dass ein volles Docker- oder Log-Verzeichnis das ganze System lahmlegt. Der freie Platz ist Reserve, um Volumes später mit `lvextend` zu vergrössern. |
+| Disk-Layout | ``` 
+nvme0n1              259:0    0 476.9G  0 disk
+├─nvme0n1p1          259:1    0     1G  0 part /boot/efi
+└─nvme0n1p2          259:2    0 475.9G  0 part
+  ├─vg0-lv_root      252:0    0    30G  0 lvm  /
+  ├─vg0-lv_boot      252:1    0     1G  0 lvm  /boot
+  ├─vg0-lv_var       252:2    0    15G  0 lvm  /var
+  ├─vg0-lv_var_log   252:3    0    10G  0 lvm  /var/log
+  ├─vg0-lv_tmp       252:4    0     5G  0 lvm  /tmp
+  ├─vg0-lv_home      252:5    0    10G  0 lvm  /home
+  ├─vg0-lv_docker    252:6    0   150G  0 lvm  /var/lib/docker
+  ├─vg0-lv_snapshots 252:7    0    80G  0 lvm  /srv/snapshots
+  └─vg0-lv_esfrozen  252:8    0    30G  0 lvm  /srv/es-frozen
+``` | Getrennte Volumes verhindern, dass ein volles Docker- oder Log-Verzeichnis das ganze System lahmlegt. Der freie Platz ist Reserve, um Volumes später mit `lvextend` zu vergrössern. |
 | Docker / Compose | Docker 29.9.1, Compose v5.6.0 (aktuell am 15.10.2026) | Aktuelle stabile Version mit allen Sicherheitsupdates. Die Version ist festgehalten, damit das Setup genau so nachgebaut werden kann. |
 | Docker-Zugriff | Nur über sudo, User nicht in der `docker`-Gruppe | Docker-Zugriff ausschliesslich über sudo, kein User in der `docker`-Gruppe, da diese root-äquivalent ist. Vorteil: explizite Rechteerhöhung und Audit-Trail. Rootless Docker wurde geprüft und für das Homelab verworfen (AppArmor/UID-Mapping-Aufwand, eingeschränkter Host-Zugriff des Agents). In Produktion: Rootless bzw. Deployment über Automation mit dediziertem Service-Account. |
 | Zurücksetzen | Skript `host/reset-cluster.sh` | Löscht Container, Volumes und den Frozen-Cache nach Rückfrage. Die Snapshots bleiben erhalten, damit nach einem Neuaufbau ein Restore möglich ist. |
