@@ -19,8 +19,6 @@
 | Docker-Zugriff | Nur über sudo, User nicht in der `docker`-Gruppe | Docker-Zugriff ausschliesslich über sudo, kein User in der `docker`-Gruppe, da diese root-äquivalent ist. Vorteil: explizite Rechteerhöhung und Audit-Trail. Rootless Docker wurde geprüft und für das Homelab verworfen (AppArmor/UID-Mapping-Aufwand, eingeschränkter Host-Zugriff des Agents). In Produktion: Rootless bzw. Deployment über Automation mit dediziertem Service-Account. |
 | Zurücksetzen | Skript `host/reset-cluster.sh` | Löscht Container, Volumes und den Frozen-Cache nach Rückfrage. Die Snapshots bleiben erhalten, damit nach einem Neuaufbau ein Restore möglich ist. |
 
-![Disk-Layout des Hosts](images/host-disk-layout.png)
-
 ## Projekt
 
 | Was | Entscheid | Warum |
